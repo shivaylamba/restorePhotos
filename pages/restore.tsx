@@ -1,31 +1,43 @@
-import { AnimatePresence, motion } from "framer-motion";
-import { NextPage } from "next";
-import Head from "next/head";
-import Image from "next/image";
-import { useState } from "react";
-import CountUp from "react-countup";
-import { UploadDropzone } from "react-uploader";
-import { Uploader } from "uploader";
-import { CompareSlider } from "../components/CompareSlider";
-import Footer from "../components/Footer";
-import Header from "../components/Header";
-import LoadingDots from "../components/LoadingDots";
-import ResizablePanel from "../components/ResizablePanel";
-import Toggle from "../components/Toggle";
-import appendNewToName from "../utils/appendNewToName";
-import downloadPhoto from "../utils/downloadPhoto";
+import { AnimatePresence, motion } from 'framer-motion';
+import { NextPage } from 'next';
+import Head from 'next/head';
+import Image from 'next/image';
+import { useState } from 'react';
+import CountUp from 'react-countup';
+import { UploadDropzone } from 'react-uploader';
+import { Uploader } from 'uploader';
+import { CompareSlider } from '../components/CompareSlider';
+import Footer from '../components/Footer';
+import Header from '../components/Header';
+import LoadingDots from '../components/LoadingDots';
+import ResizablePanel from '../components/ResizablePanel';
+import Toggle from '../components/Toggle';
+import appendNewToName from '../utils/appendNewToName';
+import downloadPhoto from '../utils/downloadPhoto';
+import NSFWPredictor from '../utils/nsfwCheck';
 
 // Configuration for the uploader
 const uploader = Uploader({
   apiKey: !!process.env.NEXT_PUBLIC_UPLOAD_API_KEY
     ? process.env.NEXT_PUBLIC_UPLOAD_API_KEY
-    : "free",
+    : 'public_W142haaETQNsKuACCycmtnaihFyw',
 });
 const options = {
   maxFileCount: 1,
-  mimeTypes: ["image/jpeg", "image/png", "image/jpg"],
+  mimeTypes: ['image/jpeg', 'image/png', 'image/jpg'],
   editor: { images: { crop: false } },
-  styles: { colors: { primary: "#000" } },
+  styles: { colors: { primary: '#000' } },
+  onValidate: async (file: any): Promise<undefined | string> => {
+    console.log('hello');
+
+    let isSafe = false;
+    try {
+      isSafe = await NSFWPredictor.isSafeImg(file);
+    } catch (error) {
+      console.log('NSFW predictor threw an error');
+    }
+    return isSafe ? undefined : 'Detected a NSFW image';
+  },
 };
 
 const Home: NextPage = () => {
@@ -44,8 +56,8 @@ const Home: NextPage = () => {
       onUpdate={(file) => {
         if (file.length !== 0) {
           setPhotoName(file[0].originalFile.originalFileName);
-          setOriginalPhoto(file[0].fileUrl.replace("raw", "thumbnail"));
-          generatePhoto(file[0].fileUrl.replace("raw", "thumbnail"));
+          setOriginalPhoto(file[0].fileUrl.replace('raw', 'thumbnail'));
+          generatePhoto(file[0].fileUrl.replace('raw', 'thumbnail'));
         }
       }}
       width="670px"
@@ -56,10 +68,10 @@ const Home: NextPage = () => {
   async function generatePhoto(fileUrl: string) {
     await new Promise((resolve) => setTimeout(resolve, 500));
     setLoading(true);
-    const res = await fetch("/api/generate", {
-      method: "POST",
+    const res = await fetch('/api/generate', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({ imageUrl: fileUrl }),
     });
@@ -88,23 +100,23 @@ const Home: NextPage = () => {
           rel="noreferrer"
           className="border rounded-2xl py-1 px-4 text-slate-500 text-sm mb-5 hover:scale-105 transition duration-300 ease-in-out"
         >
-          Want to support this project? Subscribe to{" "}
+          Want to support this project? Subscribe to{' '}
           <span className="font-semibold">my newsletter</span>.
         </a>
         <h1 className="mx-auto max-w-4xl font-display text-4xl font-bold tracking-normal text-slate-900 sm:text-6xl mb-5">
           Restore any face photo
         </h1>
         <p className="text-slate-500">
-          {" "}
+          {' '}
           {/* Obtained this number from Vercel: based on how many serverless invocations happened. Can automate later */}
-          <CountUp start={10000} end={60896} duration={2} separator="," />{" "}
+          <CountUp start={10000} end={60896} duration={2} separator="," />{' '}
           photos generated and counting.
         </p>
         <ResizablePanel>
           <AnimatePresence exitBeforeEnter>
             <motion.div className="flex justify-between items-center w-full flex-col mt-4">
               <Toggle
-                className={`${restoredLoaded ? "visible" : "invisible"} mb-6`}
+                className={`${restoredLoaded ? 'visible' : 'invisible'} mb-6`}
                 sideBySide={sideBySide}
                 setSideBySide={(newVal) => setSideBySide(newVal)}
               />
